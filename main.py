@@ -3,7 +3,7 @@ from glob import glob
 
 cap = create_cap(0) # "C:\\Users\\maxim\\video-fh4\\MFAwpTjlSY_Trim.mp4" # "C:\\Users\\maxim\\video-fh4\\FtcBrYpjnA_Trim.mp4"
 # paths = glob("C:\\Users\\maxim\\image_course\\*")
-resize_fact= (1,1)
+resize_fact = (1, 1)
 
 cv2.namedWindow('img2')
 cv2.setMouseCallback('img2', onclick_cnt)
