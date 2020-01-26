@@ -9,6 +9,11 @@ def create_cap(c = 0):
     cap = cv2.VideoCapture(c)
     return cap
 
+def capture_single_img(cap, size=(1,1)):
+    _, img = cap.read()
+    if size != (1,1):
+        img = cv2.resize(img, (size[0], size[1]))
+    return img
 def capture_img(cap, size):
     _, img = cap.read()
     h, w, ch = img.shape
@@ -39,13 +44,13 @@ def auto_canny(image, v, sigma=0.33):
 
 	# return the edged image
 	return edged
-    
+     
 def detect_edges(img, v):
     edge = auto_canny(img, v, sigma=0.6)
     # edge = average_edges(edge, n=3)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    edge = cv2.dilate(edge, kernel, iterations=1)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
     edge = cv2.morphologyEx(edge, cv2.MORPH_CLOSE, kernel)
+    edge = cv2.dilate(edge, kernel, iterations=1)
 
     return cv2.findContours(edge.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -89,20 +94,19 @@ def get_masked(cnts, mask, img):
         outs, _ = cv2.findContours(poly, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         out = outs[0]
 
-        # hull = cv2.convexHull(cnt)
-        # cv2.fillPoly(region, [cnt], 255)
+        _x, _y, _w, _h = cv2.boundingRect(out)
 
         cv2.drawContours(region, [out], 0, 255, -1)
         img2[region==255] = img[region==255]
-        cv2.imwrite("regions\\"+str(time.time())+".png", img2)
+
+        rect = img2[_y: _y+_h, _x: _x+_w]
+        cv2.imwrite("regions\\"+str(time.time())+".png", rect)
         del queue[0]
+
 
 def onclick_cnt(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         queue.append([x,y])
-
-def get_cnt_child(cnts, cnt_index):
-    return
 
 def close_img(img, c=0):
     img[:, :3] = c

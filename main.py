@@ -10,6 +10,7 @@ cv2.setMouseCallback('img2', onclick_cnt)
 
 while(1):
     img, gray, blurred, v = capture_img(cap, resize_fact)
+    print(img.shape)
 # for path in paths:
 #     img, gray, blurred, v = read_img(path, resize_fact)
 
