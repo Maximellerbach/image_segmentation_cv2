@@ -5,7 +5,7 @@ import cv2
 from glob import glob
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, datalen, batch_size=32, augm=True, proportion=0.15, shape=(256,256,3)):
+    def __init__(self, img_path, datalen, batch_size=32, augm=True, proportion=0.15, shape=(128,128,3)):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -45,11 +45,11 @@ class image_generator(keras.utils.Sequence):
             X_glow, _ = autolib.generate_random_glow(xbatch, ybatch, proportion=self.proportion)
             X_cut, _ = autolib.generate_random_cut(xbatch, ybatch, proportion=self.proportion)
 
-            print(xbatch.shape)
             xbatch = np.concatenate((xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut))/255
             ybatch = xbatch
         else:
             xbatch = xbatch/255
+            ybatch = xbatch
 
         return xbatch, ybatch
 
