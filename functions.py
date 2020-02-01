@@ -21,7 +21,7 @@ def capture_img(cap, size):
     v = np.median(img)
     img = close_img(img, 255)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.bilateralFilter(img, 6, 35, 35)
+    blurred = cv2.bilateralFilter(img, 3, 20, 20)
 
     return img, gray, blurred, v
 
@@ -32,7 +32,7 @@ def read_img(path, size):
     v = np.median(img)
     img = close_img(img, 255)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.bilateralFilter(img, 6, 20, 20)
+    blurred = cv2.bilateralFilter(img, 3, 20, 20)
     
     return img, gray, blurred, v
 
@@ -48,11 +48,12 @@ def auto_canny(image, v, sigma=0.33):
 def detect_edges(img, v):
     edge = auto_canny(img, v, sigma=0.6)
     # edge = average_edges(edge, n=3)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     edge = cv2.morphologyEx(edge, cv2.MORPH_CLOSE, kernel)
     edge = cv2.dilate(edge, kernel, iterations=1)
 
     return cv2.findContours(edge.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
 
 def get_masks(cnts, hierarchy, img):
     h, w, ch = img.shape
@@ -79,6 +80,28 @@ def get_masks(cnts, hierarchy, img):
             cv2.drawContours(img2, [cnt], 0, (int(b), int(g), int(r)), -1)
 
     return mask, img2
+
+
+def extract_external(img, cnts, hierarchy):
+    imgs = []
+    for it, cnt in enumerate(cnts):
+        hcnt = hierarchy[it][-1]
+        if hcnt==-1 and cv2.contourArea(cnt)>250*250: # TODO: set an intelligent threshold
+            rect = cv2.boundingRect(cnt)
+            x, y, w, h = rect
+            new_img = img[y:y+h, x:x+w]
+            
+            area_rect = cv2.minAreaRect(cnt)
+            aw, ah = np.int0(area_rect[1])
+
+            pts1 = cv2.boxPoints(area_rect)
+            pts2 = np.float32([[0, ah], [0, 0], [aw, 0]])
+
+            M = cv2.getAffineTransform(pts1[:3], pts2)
+            imgs.append(cv2.warpAffine(img, M, (aw, ah)))
+
+    return imgs
+    
 
 def get_masked(cnts, mask, img):
     h, w, ch = img.shape
@@ -128,6 +151,3 @@ def average_edges(edge, n=5):
 
     av = np.array(np.average(edges, axis=0, weights=weights), dtype=np.uint8)
     return av
-
-if __name__ == "__main__":
-    import main
